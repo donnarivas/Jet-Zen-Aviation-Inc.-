@@ -1,0 +1,6 @@
+{
+  "name": "LaserAway Clinical & Rewards Studio",
+  "description": "Aesthetic dermatology patient platform for instant laser and injectable booking, personalized Fitzpatrick skin diagnostics, and LaserLove Premiere rewards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
