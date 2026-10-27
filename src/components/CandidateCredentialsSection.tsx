@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   FileText,
   ExternalLink,
@@ -8,6 +8,9 @@ import {
   BookOpen,
   Download,
   Eye,
+  Camera,
+  Video,
+  Upload,
 } from 'lucide-react';
 import {
   DONNA_APPLICATION_LETTER,
@@ -20,6 +23,7 @@ import {
   filterRecommendationLetters,
   filterResumeEntries,
 } from '../utils/jetzenLogic';
+import { loadCandidateMedia, saveCandidateMedia } from '../utils/mediaStorage';
 
 const LOR_CATEGORY_TABS: { id: LorFilterCategory; label: string }[] = [
   { id: 'all', label: 'All Signed Letters' },
@@ -34,6 +38,39 @@ export const CandidateCredentialsSection: React.FC = () => {
   const [resumeFilter, setResumeFilter] = useState<
     'all' | 'education' | 'experience'
   >('all');
+
+  // Section 02 Profile Photo / Loop Video state
+  const [cvProfileMedia, setCvProfileMedia] = useState<{
+    url: string;
+    mediaType: 'image' | 'video';
+    fileName: string;
+  } | null>(null);
+  const cvMediaInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    loadCandidateMedia('cv-profile-media').then((saved) => {
+      if (active && saved) {
+        setCvProfileMedia(saved);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleCvMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const isVideo =
+      file.type.startsWith('video/') ||
+      /\.(mp4|webm|mov|m4v|ogg)$/i.test(file.name);
+    const mediaType: 'image' | 'video' = isVideo ? 'video' : 'image';
+    const url = URL.createObjectURL(file);
+    setCvProfileMedia({ url, mediaType, fileName: file.name });
+    saveCandidateMedia('cv-profile-media', file, mediaType);
+    e.target.value = '';
+  };
 
   // Letters of Recommendation & Application state
   const [activeVaultMode, setActiveVaultMode] = useState<
@@ -226,15 +263,17 @@ export const CandidateCredentialsSection: React.FC = () => {
                             setActiveLetterModal(lor);
                           }
                         }}
-                        className="mt-3 relative group cursor-pointer border border-[#D5C7B4] bg-white overflow-hidden h-56 flex items-start justify-center"
+                        className="mt-3 relative group cursor-pointer border border-[#D5C7B4] bg-white overflow-hidden h-64 flex items-start justify-center"
                       >
                         <img
                           src={lor.previewImageUrl}
-                          alt={`Uploaded signed letter of recommendation from ${lor.authorName}`}
+                          alt={`Uploaded signed letter of recommendation from ${lor.authorName} (${lor.date})`}
                           className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.02]"
                         />
                         <div className="absolute inset-x-0 bottom-0 bg-[#0F141C]/85 text-[#FAF8F5] px-3 py-1.5 flex items-center justify-between text-[11px] font-mono-tabular">
-                          <span className="truncate">{lor.fileName}</span>
+                          <span className="truncate">
+                            Letter Date: {lor.date}
+                          </span>
                           <span className="flex items-center gap-1 shrink-0 ml-2 text-[#E5C158]">
                             <Eye className="w-3 h-3" />
                             View Full Scan
@@ -313,23 +352,118 @@ export const CandidateCredentialsSection: React.FC = () => {
         className="scroll-mt-20 py-20 border-b border-[#E2D9CC] bg-[#F5F0E8]"
       >
         <div className="max-w-[1200px] mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-            <div>
-              <p className="text-xs text-[#6E655C] mb-2">
-                02. Candidate Curriculum Vitae · Donna Aseret Rivas
-              </p>
-              <h2
-                id="resume-heading"
-                className="font-display text-3xl md:text-4xl font-semibold text-[#0F141C] tracking-tight"
+          {/* Hidden Input for Section 02 Profile Photo or Loop Video */}
+          <input
+            ref={cvMediaInputRef}
+            type="file"
+            accept="image/*,video/mp4,video/webm,video/quicktime,video/*"
+            onChange={handleCvMediaUpload}
+            className="hidden"
+            aria-label="Upload Section 02 candidate profile photo or loop video"
+          />
+
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+              {/* Uploadable Photo / Loop Video Profile Frame near 02. Candidate Curriculum Vitae */}
+              <div
+                onClick={() => cvMediaInputRef.current?.click()}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    cvMediaInputRef.current?.click();
+                  }
+                }}
+                data-testid="cv-profile-media-frame"
+                className="relative w-28 h-28 md:w-32 md:h-32 border-2 border-[#0F141C] bg-[#FAF8F5] overflow-hidden shrink-0 cursor-pointer group flex flex-col items-center justify-center text-center"
               >
-                Academic Pedigree & Consultative Sales Track Record
-              </h2>
-              <p className="mt-2 text-sm text-[#4A453E]">
-                Pepperdine University, Caruso School of Law (M.L.S. · 2026) · Georgetown University (Strategic Management · 2026) · Harvard Extension School (2025) · Cal Poly Pomona (BSBA · 2022 – 2024)
-              </p>
+                {cvProfileMedia ? (
+                  <>
+                    {cvProfileMedia.mediaType === 'video' ? (
+                      <video
+                        key={cvProfileMedia.url}
+                        src={cvProfileMedia.url}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        data-testid="cv-profile-loop-video"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <img
+                        src={cvProfileMedia.url}
+                        alt="Donna Aseret Rivas — Candidate Curriculum Vitae Profile"
+                        data-testid="cv-profile-image"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 bg-[#0F141C]/85 text-[#FAF8F5] px-2 py-1 text-[10px] font-mono-tabular flex items-center justify-center gap-1">
+                      {cvProfileMedia.mediaType === 'video' ? (
+                        <>
+                          <Video className="w-3 h-3 text-[#E5C158] shrink-0" />
+                          <span>Loop Video</span>
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="w-3 h-3 text-[#E5C158] shrink-0" />
+                          <span>Profile Photo</span>
+                        </>
+                      )}
+                    </div>
+                    <div className="absolute inset-0 bg-[#0F141C]/75 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-[#FAF8F5] text-[11px] font-semibold p-2">
+                      <Upload className="w-4 h-4 text-[#D4AF7A] mb-1" />
+                      <span>Replace Photo / Loop Video</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-2.5 flex flex-col items-center justify-center">
+                    <span className="font-display text-2xl font-bold text-[#0F141C]">
+                      DR
+                    </span>
+                    <span className="mt-1 text-[10px] font-semibold text-[#9E3B33] flex items-center gap-1 leading-tight">
+                      <Video className="w-3 h-3 shrink-0" />
+                      <span>Photo / Loop Video</span>
+                    </span>
+                    <span className="mt-0.5 text-[9px] text-[#6E655C]">
+                      Click to Upload
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <p className="text-xs text-[#6E655C]">
+                    02. Candidate Curriculum Vitae · Donna Aseret Rivas
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => cvMediaInputRef.current?.click()}
+                    data-testid="cv-profile-upload-btn"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#FAF8F5] hover:bg-[#0F141C] text-[#0F141C] hover:text-[#FAF8F5] border border-[#D8CFC2] text-[11px] font-semibold transition-colors"
+                  >
+                    <Video className="w-3.5 h-3.5 text-[#9E3B33]" />
+                    <span>
+                      {cvProfileMedia
+                        ? 'Change Photo / Loop Video'
+                        : 'Upload Profile Photo or Loop Video'}
+                    </span>
+                  </button>
+                </div>
+                <h2
+                  id="resume-heading"
+                  className="font-display text-3xl md:text-4xl font-semibold text-[#0F141C] tracking-tight"
+                >
+                  Academic Pedigree & Consultative Sales Track Record
+                </h2>
+                <p className="mt-2 text-sm text-[#4A453E]">
+                  Pepperdine University, Caruso School of Law (M.L.S. · 2026) · Georgetown University (Strategic Management · 2026) · Harvard Extension School (2025) · Cal Poly Pomona (BSBA · 2022 – 2024)
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-1 p-1 bg-[#EFE9E0] border border-[#D8CFC2] shrink-0">
+            <div className="flex items-center gap-1 p-1 bg-[#EFE9E0] border border-[#D8CFC2] shrink-0 self-start lg:self-end">
               {[
                 { id: 'all', label: 'Complete CV (8)' },
                 { id: 'education', label: 'Education (4)' },

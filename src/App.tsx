@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { FileCheck, Award, Plane, Sliders } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { FileCheck, Award, Plane, Sliders, Camera, Upload } from 'lucide-react';
 import {
   INITIAL_CRM_DEALS,
   QUALIFICATIONS_AND_DUTIES,
@@ -15,6 +15,7 @@ import {
   CandidateApplicationSection,
   DealSheetModal,
 } from './components/CandidateApplicationModal';
+import { loadCandidateMedia, saveCandidateMedia } from './utils/mediaStorage';
 
 export default function App() {
   // JetZen ML Broker CRM Pipeline State
@@ -23,6 +24,32 @@ export default function App() {
     useState<number>(14.5);
   const [selectedDealForModal, setSelectedDealForModal] =
     useState<CrmCharterDeal | null>(null);
+
+  // Header Candidate Portrait Upload State
+  const [headerPhotoUrl, setHeaderPhotoUrl] = useState<string | null>(null);
+  const headerPhotoInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    loadCandidateMedia('header-portrait').then((saved) => {
+      if (active && saved && saved.mediaType === 'image') {
+        setHeaderPhotoUrl(saved.url);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleHeaderPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const objectUrl = URL.createObjectURL(file);
+    setHeaderPhotoUrl(objectUrl);
+    saveCandidateMedia('header-portrait', file, 'image');
+    showBanner(`Header candidate portrait updated (${file.name}).`);
+    e.target.value = '';
+  };
 
   // Qualification & Duties Self-Check State (All 20 verified by Donna's credentials)
   const [checkedQualIds, setCheckedQualIds] = useState<string[]>(
@@ -96,16 +123,50 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#0F141C]">
+      {/* Hidden File Input for Header Photo Upload */}
+      <input
+        ref={headerPhotoInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleHeaderPhotoUpload}
+        className="hidden"
+        aria-label="Upload header candidate photo"
+      />
+
       {/* Strict 3-Zone Top Bar Contract */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-sm border-b border-[#E2D9CC]">
         <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between gap-8">
-          {/* Zone 1: Single text element wordmark */}
-          <a
-            href="#top"
-            className="font-display text-2xl font-bold tracking-tight text-[#0F141C] whitespace-nowrap shrink-0"
-          >
-            Donna A. Rivas × JetZen
-          </a>
+          {/* Zone 1: Brand Wordmark + Uploadable Header Profile Photo */}
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => headerPhotoInputRef.current?.click()}
+              title="Click to upload candidate header photo"
+              data-testid="navbar-photo-upload-btn"
+              className="relative w-10 h-10 border border-[#0F141C] bg-[#0F141C] text-[#FAF8F5] overflow-hidden flex items-center justify-center group shrink-0"
+            >
+              {headerPhotoUrl ? (
+                <img
+                  src={headerPhotoUrl}
+                  alt="Donna Aseret Rivas Portrait"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="font-display text-sm font-semibold tracking-wider text-[#D4AF7A]">
+                  DR
+                </span>
+              )}
+              <span className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Camera className="w-3.5 h-3.5 text-white" />
+              </span>
+            </button>
+            <a
+              href="#top"
+              className="font-display text-2xl font-bold tracking-tight text-[#0F141C] whitespace-nowrap shrink-0"
+            >
+              Donna A. Rivas × JetZen
+            </a>
+          </div>
 
           {/* Zone 2: 4 concise single-line text navigation links */}
           <nav
@@ -178,18 +239,76 @@ export default function App() {
               {/* Left 6 Columns: Distinguished Candidate Proposition */}
               <div className="lg:col-span-6 flex flex-col justify-between py-2">
                 <div>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#6E655C] mb-4">
-                    <span className="whitespace-nowrap font-semibold text-[#0F141C]">
-                      Candidate: Donna Aseret Rivas, MLS, BSBA
-                    </span>
-                    <span aria-hidden="true">·</span>
-                    <span className="whitespace-nowrap">
-                      Role: Private Jet Charter Broker (Remote)
-                    </span>
-                    <span aria-hidden="true">·</span>
-                    <span className="font-mono-tabular text-[#9E3B33] whitespace-nowrap font-semibold">
-                      7 Signed Faculty & Executive LORs
-                    </span>
+                  {/* Uploadable Header Portrait Card + Candidate Metadata */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-5 pb-5 border-b border-[#E2D9CC]">
+                    <div
+                      onClick={() => headerPhotoInputRef.current?.click()}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          headerPhotoInputRef.current?.click();
+                        }
+                      }}
+                      data-testid="hero-header-photo-frame"
+                      className="relative w-24 h-24 sm:w-28 sm:h-28 border-2 border-[#0F141C] bg-[#EFE9E0] overflow-hidden shrink-0 cursor-pointer group flex flex-col items-center justify-center text-center"
+                    >
+                      {headerPhotoUrl ? (
+                        <>
+                          <img
+                            src={headerPhotoUrl}
+                            alt="Donna Aseret Rivas, MLS, BSBA — Executive Portrait"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-[#0F141C]/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-[#FAF8F5] text-[11px] font-semibold p-2">
+                            <Camera className="w-4 h-4 text-[#D4AF7A] mb-1" />
+                            <span>Change Photo</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="p-2 flex flex-col items-center justify-center">
+                          <span className="font-display text-2xl font-bold text-[#0F141C]">
+                            DR
+                          </span>
+                          <span className="mt-1 text-[10px] font-semibold text-[#9E3B33] flex items-center gap-1">
+                            <Upload className="w-3 h-3" />
+                            Upload Photo
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#6E655C]">
+                        <span className="whitespace-nowrap font-semibold text-[#0F141C]">
+                          Candidate: Donna Aseret Rivas, MLS, BSBA
+                        </span>
+                        <span aria-hidden="true">·</span>
+                        <span className="whitespace-nowrap">
+                          Role: Private Jet Charter Broker (Remote)
+                        </span>
+                        <span aria-hidden="true">·</span>
+                        <span className="font-mono-tabular text-[#9E3B33] whitespace-nowrap font-semibold">
+                          7 Signed Faculty & Executive LORs
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#575049]">
+                        Pepperdine University Caruso School of Law (MLS) · Georgetown University · Harvard Extension School · Cal Poly Pomona (BSBA)
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => headerPhotoInputRef.current?.click()}
+                        data-testid="hero-header-photo-upload-btn"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#EFE9E0] hover:bg-[#0F141C] text-[#0F141C] hover:text-[#FAF8F5] border border-[#D5C7B4] text-[11px] font-semibold transition-colors"
+                      >
+                        <Camera className="w-3.5 h-3.5 text-[#9E3B33] group-hover:text-[#D4AF7A]" />
+                        <span>
+                          {headerPhotoUrl
+                            ? 'Replace Header Portrait Photo'
+                            : 'Upload Header Portrait Photo'}
+                        </span>
+                      </button>
+                    </div>
                   </div>
 
                   <h1
