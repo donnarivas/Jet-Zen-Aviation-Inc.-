@@ -398,22 +398,9 @@ export const CandidateCredentialsSection: React.FC = () => {
                         className="w-full h-full object-cover"
                       />
                     )}
-                    <div className="absolute inset-x-0 bottom-0 bg-[#0F141C]/85 text-[#FAF8F5] px-2 py-1 text-[10px] font-mono-tabular flex items-center justify-center gap-1">
-                      {cvProfileMedia.mediaType === 'video' ? (
-                        <>
-                          <Video className="w-3 h-3 text-[#E5C158] shrink-0" />
-                          <span>Loop Video</span>
-                        </>
-                      ) : (
-                        <>
-                          <Camera className="w-3 h-3 text-[#E5C158] shrink-0" />
-                          <span>Profile Photo</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="absolute inset-0 bg-[#0F141C]/75 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-[#FAF8F5] text-[11px] font-semibold p-2">
+                    <div className="absolute inset-0 bg-[#0F141C]/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-[#FAF8F5] text-[11px] font-semibold p-2">
                       <Upload className="w-4 h-4 text-[#D4AF7A] mb-1" />
-                      <span>Replace Photo / Loop Video</span>
+                      <span>Change Media</span>
                     </div>
                   </>
                 ) : (
@@ -425,32 +412,14 @@ export const CandidateCredentialsSection: React.FC = () => {
                       <Video className="w-3 h-3 shrink-0" />
                       <span>Photo / Loop Video</span>
                     </span>
-                    <span className="mt-0.5 text-[9px] text-[#6E655C]">
-                      Click to Upload
-                    </span>
                   </div>
                 )}
               </div>
 
               <div>
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <p className="text-xs text-[#6E655C]">
-                    02. Candidate Curriculum Vitae · Donna Aseret Rivas
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => cvMediaInputRef.current?.click()}
-                    data-testid="cv-profile-upload-btn"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#FAF8F5] hover:bg-[#0F141C] text-[#0F141C] hover:text-[#FAF8F5] border border-[#D8CFC2] text-[11px] font-semibold transition-colors"
-                  >
-                    <Video className="w-3.5 h-3.5 text-[#9E3B33]" />
-                    <span>
-                      {cvProfileMedia
-                        ? 'Change Photo / Loop Video'
-                        : 'Upload Profile Photo or Loop Video'}
-                    </span>
-                  </button>
-                </div>
+                <p className="text-xs text-[#6E655C] mb-2">
+                  02. Candidate Curriculum Vitae · Donna Aseret Rivas
+                </p>
                 <h2
                   id="resume-heading"
                   className="font-display text-3xl md:text-4xl font-semibold text-[#0F141C] tracking-tight"

@@ -295,19 +295,6 @@ export default function App() {
                       <p className="text-xs text-[#575049]">
                         Pepperdine University Caruso School of Law (MLS) · Georgetown University · Harvard Extension School · Cal Poly Pomona (BSBA)
                       </p>
-                      <button
-                        type="button"
-                        onClick={() => headerPhotoInputRef.current?.click()}
-                        data-testid="hero-header-photo-upload-btn"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#EFE9E0] hover:bg-[#0F141C] text-[#0F141C] hover:text-[#FAF8F5] border border-[#D5C7B4] text-[11px] font-semibold transition-colors"
-                      >
-                        <Camera className="w-3.5 h-3.5 text-[#9E3B33] group-hover:text-[#D4AF7A]" />
-                        <span>
-                          {headerPhotoUrl
-                            ? 'Replace Header Portrait Photo'
-                            : 'Upload Header Portrait Photo'}
-                        </span>
-                      </button>
                     </div>
                   </div>
 
