@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   FileText,
   ExternalLink,
@@ -6,7 +6,6 @@ import {
   X,
   CheckCircle2,
   BookOpen,
-  Upload,
   Download,
   Eye,
 } from 'lucide-react';
@@ -37,9 +36,6 @@ export const CandidateCredentialsSection: React.FC = () => {
   >('all');
 
   // Letters of Recommendation & Application state
-  const [lettersList, setLettersList] = useState<RecommendationLetter[]>(
-    RECOMMENDATION_LETTERS
-  );
   const [activeVaultMode, setActiveVaultMode] = useState<
     'recommendations' | 'cover-letter'
   >('recommendations');
@@ -50,60 +46,13 @@ export const CandidateCredentialsSection: React.FC = () => {
   const [modalViewTab, setModalViewTab] = useState<'scan' | 'transcript'>(
     'scan'
   );
-  const [uploadBannerMsg, setUploadBannerMsg] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const handleUploadNewLetters = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    const addedLetters: RecommendationLetter[] = Array.from(files).map(
-      (file, idx) => {
-        const objectUrl = URL.createObjectURL(file);
-        const isImage = file.type.startsWith('image/');
-        return {
-          id: `uploaded-lor-${Date.now()}-${idx}`,
-          authorName: file.name
-            .replace(/\.pdf$|\.png$|\.jpg$|\.jpeg$/i, '')
-            .replace(/[_-]+/g, ' '),
-          authorTitle: 'Uploaded Candidate Endorsement Document',
-          institution: 'Verified Candidate Upload',
-          date: 'Uploaded Today',
-          contactInfo: 'Attached directly by Donna Aseret Rivas',
-          category: 'sales-consultancy',
-          categoryLabel: 'Uploaded Endorsement File',
-          fileName: file.name,
-          pdfUrl: objectUrl,
-          previewImageUrl: isImage
-            ? objectUrl
-            : '/assets/aistudio/Letter_of_Recommendation_-_Rivas_75580758.png',
-          headlineQuote: `Official uploaded recommendation file (${file.name}, ${Math.max(1, Math.round(file.size / 1024))} KB) attached to Donna Aseret Rivas's JetZen Private Jet Charter Broker candidate dossier.`,
-          jetzenQualificationsProved: [
-            'Private Aviation Sales Experience',
-            'Client Relationship Management',
-            'High-Level Communication Skills',
-          ],
-          fullTranscriptParagraphs: [
-            `Uploaded Document File: ${file.name} (${Math.max(1, Math.round(file.size / 1024))} KB).`,
-            'This file has been uploaded and attached to Donna Aseret Rivas’s official JetZen Private Jet Charter Broker application dossier.',
-          ],
-        };
-      }
-    );
-
-    setLettersList((prev) => [...addedLetters, ...prev]);
-    setUploadBannerMsg(
-      `Uploaded ${addedLetters.length} file${addedLetters.length > 1 ? 's' : ''} (${addedLetters.map((l) => l.fileName).join(', ')}) to the Endorsement Vault.`
-    );
-    e.target.value = '';
-  };
 
   const visibleResumeEntries = filterResumeEntries(
     DONNA_RESUME_ENTRIES,
     resumeFilter
   );
   const visibleLetters = filterRecommendationLetters(
-    lettersList,
+    RECOMMENDATION_LETTERS,
     lorCategory,
     lorSearch
   );
@@ -127,7 +76,7 @@ export const CandidateCredentialsSection: React.FC = () => {
                 className="font-display text-3xl md:text-4xl font-semibold text-[#0F141C] tracking-tight"
                 style={{ textWrap: 'balance' }}
               >
-                {lettersList.length} Uploaded Letters of Recommendation & Formal Application to JetZen
+                {RECOMMENDATION_LETTERS.length} Uploaded Letters of Recommendation & Formal Application to JetZen
               </h2>
               <p className="mt-3 text-[15px] text-[#4A453E] leading-relaxed">
                 All 7 official signed PDF Letters of Recommendation from Georgetown University, Harvard Extension School, Carey & Danis LLC, Cal Poly Pomona, and Best Friends Animal Society are uploaded, scanned, and embedded below for direct inspection and download.
@@ -203,7 +152,7 @@ export const CandidateCredentialsSection: React.FC = () => {
                   onClick={() => setActiveVaultMode('recommendations')}
                   className="px-5 py-2.5 bg-[#0F141C] text-white text-xs font-semibold whitespace-nowrap"
                 >
-                  Inspect All {lettersList.length} Uploaded Letters of Recommendation
+                  Inspect All {RECOMMENDATION_LETTERS.length} Uploaded Letters of Recommendation
                 </button>
               </div>
             </div>
